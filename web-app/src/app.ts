@@ -4,7 +4,7 @@ import {
   WebPubSubClient,
   WebPubSubJsonReliableProtocol,
 } from "@azure/web-pubsub-client";
-import type { BrowserToLaptop, LaptopToBrowser, SessionInfo } from "../../laptop-agent/src/protocol";
+import type { BrowserToLaptop, LaptopToBrowser, SessionInfo } from "./protocol";
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -44,7 +44,7 @@ async function connect() {
     if (!res.ok) throw new Error(`negotiate failed: ${res.status}`);
     const { url } = await res.json() as { url: string };
 
-    pubsub = new WebPubSubClient(url, { protocol: new WebPubSubJsonReliableProtocol() });
+    pubsub = new WebPubSubClient(url, { protocol: WebPubSubJsonReliableProtocol() });
 
     pubsub.on("connected", async () => {
       setStatus("connected");

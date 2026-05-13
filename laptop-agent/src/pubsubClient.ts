@@ -17,7 +17,7 @@ export class PubSubClient {
   constructor(private onMessage: (msg: BrowserToLaptop, userId: string | undefined) => void) {
     this.client = new WebPubSubClient(
       { hub: HUB, credential: { getClientAccessUrl: () => this.getAccessUrl() } },
-      { protocol: new WebPubSubJsonReliableProtocol() },
+      { protocol: WebPubSubJsonReliableProtocol() },
     );
 
     this.client.on("connected", async () => {
