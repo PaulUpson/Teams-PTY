@@ -8,8 +8,9 @@ const watch = argv.includes("--watch");
 mkdirSync("dist", { recursive: true });
 
 // Copy static files into dist so it's a fully self-contained folder
-copyFileSync("index.html", "dist/index.html");
-copyFileSync("style.css",  "dist/style.css");
+copyFileSync("index.html",               "dist/index.html");
+copyFileSync("style.css",                "dist/style.css");
+copyFileSync("staticwebapp.config.json", "dist/staticwebapp.config.json");
 
 const ctx = await esbuild.context({
   entryPoints: {
