@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"C:\\\\src\\\\Claude\\\\Teams-PTY\\\\laptop-agent\\\\src\" \"C:\\\\src\\\\Claude\\\\Teams-PTY\\\\web-app\\\\api\\\\negotiate\" \"C:\\\\src\\\\Claude\\\\Teams-PTY\\\\infrastructure\")"
+    ]
+  }
+}

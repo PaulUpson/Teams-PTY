@@ -1,0 +1,18 @@
+{
+  "name": "pty-relay-api",
+  "version": "1.0.0",
+  "description": "Azure Functions API for the PTY relay web app",
+  "main": "negotiate/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/functions": "^3.5.0",
+    "@azure/web-pubsub": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.8.0"
+  }
+}

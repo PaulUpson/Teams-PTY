@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Remote Terminal</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css">
+</head>
+<body>
+  <header>
+    <div id="session-tabs" role="tablist" aria-label="Terminal sessions"></div>
+    <div id="header-actions">
+      <button id="btn-new"    title="New session">+</button>
+      <button id="btn-kill"   title="Kill active session">&#x2715;</button>
+      <button id="btn-status" title="Connection status" aria-live="polite">&#x25CF;</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="terminal-container"></div>
+  </main>
+
+  <!-- New session dialog -->
+  <dialog id="dlg-new-session">
+    <form method="dialog">
+      <h2>New Session</h2>
+      <label>
+        Session ID
+        <input id="inp-session-id" type="text" placeholder="claude" required>
+      </label>
+      <label>
+        Command
+        <select id="inp-command">
+          <option value="claude">claude</option>
+          <option value="copilot">gh copilot</option>
+          <option value="shell">powershell</option>
+          <option value="custom">custom…</option>
+        </select>
+      </label>
+      <label id="lbl-custom" hidden>
+        Custom command
+        <input id="inp-custom-command" type="text" placeholder="node script.js">
+      </label>
+      <menu>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button id="btn-create" value="create">Create</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="dist/app.js"></script>
+</body>
+</html>

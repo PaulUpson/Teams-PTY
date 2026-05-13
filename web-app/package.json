@@ -1,0 +1,21 @@
+{
+  "name": "pty-relay-web",
+  "version": "1.0.0",
+  "description": "xterm.js browser client for the PTY relay",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && node build.mjs",
+    "dev": "node build.mjs --watch"
+  },
+  "dependencies": {
+    "@azure/web-pubsub-client": "^1.0.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0"
+  },
+  "devDependencies": {
+    "@azure/static-web-apps-cli": "^2.0.9",
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.8.0"
+  }
+}

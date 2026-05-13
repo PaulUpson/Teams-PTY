@@ -1,0 +1,28 @@
+{
+  "name": "pty-relay-agent",
+  "version": "1.0.0",
+  "description": "Relays PTY sessions (claude, gh copilot) to a mobile browser via Azure Web PubSub",
+  "main": "dist/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@azure/web-pubsub": "^1.0.0",
+    "@azure/web-pubsub-client": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "node-pty": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "rimraf": "^5.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
