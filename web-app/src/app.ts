@@ -25,9 +25,13 @@ const sessions = new Map<string, Session>();
 
 const tabsEl       = document.getElementById("session-tabs")!;
 const containerEl  = document.getElementById("terminal-container")!;
+const headerEl     = document.getElementById("header")!;
 const btnNew       = document.getElementById("btn-new")!;
 const btnKill      = document.getElementById("btn-kill")!;
 const btnStatus    = document.getElementById("btn-status")!;
+const btnFullscreen = document.getElementById("btn-fullscreen")!;
+const btnFontUp    = document.getElementById("btn-font-up")!;
+const btnFontDown  = document.getElementById("btn-font-down")!;
 const dlgNew       = document.getElementById("dlg-new-session") as HTMLDialogElement;
 const inpSessionId = document.getElementById("inp-session-id") as HTMLInputElement;
 const inpCommand   = document.getElementById("inp-command") as HTMLSelectElement;
@@ -35,12 +39,36 @@ const inpCustom    = document.getElementById("inp-custom-command") as HTMLInputE
 const lblCustom    = document.getElementById("lbl-custom") as HTMLElement;
 const btnCreate    = document.getElementById("btn-create")!;
 
+let fontSize = 13;;
+
 // ── Connection ────────────────────────────────────────────────────────────────
+
+function getKey(): string {
+  let key = sessionStorage.getItem("negotiate-key");
+  if (!key) {
+    key = prompt("Enter access key:") ?? "";
+    if (key) sessionStorage.setItem("negotiate-key", key);
+  }
+  return key;
+}
 
 async function connect() {
   setStatus("connecting");
   try {
-    const res  = await fetch("/api/negotiate");
+    const key = getKey();
+    if (!key) { setStatus("disconnected"); return; }
+
+    const res = await fetch("/api/negotiate", {
+      headers: { "x-negotiate-key": key },
+    });
+
+    if (res.status === 401) {
+      sessionStorage.removeItem("negotiate-key");
+      alert("Invalid key — please try again.");
+      setStatus("disconnected");
+      return;
+    }
+
     if (!res.ok) throw new Error(`negotiate failed: ${res.status}`);
     const { url } = await res.json() as { url: string };
 
@@ -117,7 +145,7 @@ function handleServerMessage(msg: LaptopToBrowser) {
 function createLocalSession(id: string, command: string, alive = true): Session {
   const term = new Terminal({
     cursorBlink: true,
-    fontSize: 14,
+    fontSize,
     fontFamily: '"Cascadia Code", "Fira Code", monospace',
     theme: {
       background:   "#1a1a1a",
@@ -181,10 +209,14 @@ function activateSession(id: string) {
 function syncSessionList(list: SessionInfo[]) {
   for (const info of list) {
     if (!sessions.has(info.id)) {
-      createLocalSession(info.id, info.command, info.alive);
+      const session = createLocalSession(info.id, info.command, info.alive);
+      // Replay scrollback so reconnected browser sees prior output
+      if (info.scrollback) {
+        const bytes = Uint8Array.from(atob(info.scrollback), c => c.charCodeAt(0));
+        session.term.write(bytes);
+      }
     }
   }
-  // Auto-activate first session if none active
   if (!activeSessionId && sessions.size > 0) {
     activateSession(sessions.keys().next().value!);
   }
@@ -267,6 +299,56 @@ btnCreate.addEventListener("click", (e) => {
 // Close dialog on backdrop click
 dlgNew.addEventListener("click", (e) => {
   if (e.target === dlgNew) dlgNew.close();
+});
+
+// Fullscreen toggle
+btnFullscreen.addEventListener("click", () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+  }
+});
+document.addEventListener("fullscreenchange", () => {
+  btnFullscreen.textContent = document.fullscreenElement ? "⤓" : "⤢";
+});
+
+// Font size controls — resize all open terminals
+function setFontSize(size: number) {
+  fontSize = Math.max(8, Math.min(24, size));
+  for (const s of sessions.values()) {
+    s.term.options.fontSize = fontSize;
+    s.fitAddon.fit();
+  }
+}
+btnFontUp.addEventListener("click",   () => setFontSize(fontSize + 1));
+btnFontDown.addEventListener("click", () => setFontSize(fontSize - 1));
+
+// Visual viewport — hide header when soft keyboard appears on mobile
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", () => {
+    const keyboardVisible =
+      window.visualViewport!.height < window.innerHeight * 0.75;
+    // In portrait, reclaim space when keyboard is open
+    headerEl.style.display =
+      (keyboardVisible && window.innerWidth < 768) ? "none" : "";
+    // Always refit after viewport change
+    if (activeSessionId) {
+      const s = sessions.get(activeSessionId);
+      if (s) {
+        s.fitAddon.fit();
+        send({ type: "session.resize", sessionId: activeSessionId,
+               cols: s.term.cols, rows: s.term.rows });
+      }
+    }
+  });
+}
+
+// Orientation change refit
+window.addEventListener("orientationchange", () => {
+  setTimeout(() => {
+    if (activeSessionId) sessions.get(activeSessionId)?.fitAddon.fit();
+  }, 300); // brief delay for browser to finish rotating
 });
 
 function showPlaceholder() {

@@ -14,9 +14,15 @@ const sessions = new SessionManager(
 const pubsub = new PubSubClient((msg: BrowserToLaptop, userId) => {
   switch (msg.type) {
     case "session.create": {
-      const err = sessions.create(msg.sessionId, msg.command, msg.cols, msg.rows);
-      if (err) pubsub.send({ type: "error", message: err });
-      else console.log(`[session] created '${msg.sessionId}' (${msg.command}) for ${userId}`);
+      try {
+        const err = sessions.create(msg.sessionId, msg.command, msg.cols, msg.rows);
+        if (err) pubsub.send({ type: "error", message: err });
+        else console.log(`[session] created '${msg.sessionId}' (${msg.command}) for ${userId}`);
+      } catch (e: any) {
+        const message = `Failed to spawn '${msg.command}': ${e?.message ?? e}`;
+        console.error(`[session]`, message);
+        pubsub.send({ type: "error", message });
+      }
       break;
     }
     case "session.input": {

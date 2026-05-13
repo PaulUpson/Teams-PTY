@@ -19,5 +19,6 @@ export interface SessionInfo {
   id: string;
   command: string;
   alive: boolean;
-  startedAt: string; // ISO timestamp
+  startedAt: string;    // ISO timestamp
+  scrollback: string;   // base64 encoded last 50KB of PTY output
 }

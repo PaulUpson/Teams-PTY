@@ -3,10 +3,13 @@ import { EventEmitter } from "events";
 import { config } from "./config";
 
 // Named session presets — extend as needed
+const isWin = process.platform === "win32";
+const exe   = (name: string) => isWin ? `${name}.exe` : name;
+
 export const SESSION_PRESETS: Record<string, { file: string; args: string[] }> = {
-  claude:  { file: "claude",       args: [] },
-  copilot: { file: "gh",           args: ["copilot", "suggest", "-t", "shell"] },
-  shell:   { file: "powershell",   args: [] },
+  claude:  { file: exe("claude"),      args: [] },
+  copilot: { file: exe("gh"),          args: ["copilot", "suggest", "-t", "shell"] },
+  shell:   { file: exe("powershell"),  args: [] },
 };
 
 export interface PtySessionEvents {
@@ -21,6 +24,9 @@ export class PtySession extends EventEmitter {
   private proc: pty.IPty;
   private killTimer: NodeJS.Timeout;
   private dead = false;
+
+  private scrollbackBuf = Buffer.alloc(0);
+  private readonly MAX_SCROLLBACK = 50 * 1024; // 50 KB
 
   constructor(id: string, command: string, cols: number, rows: number) {
     super();
@@ -47,9 +53,13 @@ export class PtySession extends EventEmitter {
 
     this.proc.onData((raw: string) => {
       if (!this.dead) {
-        // Encode raw PTY bytes as base64 — preserves ANSI escape sequences
-        const b64 = Buffer.from(raw, "binary").toString("base64");
-        this.emit("data", b64);
+        const rawBuf = Buffer.from(raw, "binary");
+        // Append to scrollback ring (keep last MAX_SCROLLBACK bytes)
+        this.scrollbackBuf = Buffer.concat([this.scrollbackBuf, rawBuf]);
+        if (this.scrollbackBuf.length > this.MAX_SCROLLBACK) {
+          this.scrollbackBuf = this.scrollbackBuf.slice(this.scrollbackBuf.length - this.MAX_SCROLLBACK);
+        }
+        this.emit("data", rawBuf.toString("base64"));
       }
     });
 
@@ -87,6 +97,10 @@ export class PtySession extends EventEmitter {
 
   get alive(): boolean {
     return !this.dead;
+  }
+
+  getScrollback(): string {
+    return this.scrollbackBuf.toString("base64");
   }
 
   private parseCommand(command: string): [string, string[]] {

@@ -16,7 +16,7 @@ export class PubSubClient {
 
   constructor(private onMessage: (msg: BrowserToLaptop, userId: string | undefined) => void) {
     this.client = new WebPubSubClient(
-      { hub: HUB, credential: { getClientAccessUrl: () => this.getAccessUrl() } },
+      { getClientAccessUrl: () => this.getAccessUrl() },
       { protocol: WebPubSubJsonReliableProtocol() },
     );
 
@@ -35,17 +35,19 @@ export class PubSubClient {
       if (e.message.group !== GROUP_LAPTOP) return;
       const userId = e.message.fromUserId;
 
-      if (config.allowedUserIds.length > 0 && (!userId || !config.allowedUserIds.includes(userId))) {
-        console.warn(`[pubsub] rejected message from unauthorized user: ${userId}`);
-        return;
-      }
+      // Auth is enforced at the negotiate endpoint (NEGOTIATE_KEY secret).
+      // Any client that connected has already proven they hold the key.
 
+      let msg: BrowserToLaptop;
       try {
-        const msg = e.message.data as BrowserToLaptop;
-        this.onMessage(msg, userId);
+        msg = e.message.data as BrowserToLaptop;
       } catch (err) {
         console.error("[pubsub] failed to parse message:", err);
+        return;
       }
+      // Handler errors (e.g. PTY spawn failures) are caught by index.ts and
+      // sent back to the browser as error messages.
+      this.onMessage(msg, userId);
     });
   }
 

@@ -58,10 +58,11 @@ export class SessionManager {
 
   list(): SessionInfo[] {
     return Array.from(this.sessions.values()).map(s => ({
-      id:        s.id,
-      command:   s.command,
-      alive:     s.alive,
-      startedAt: s.startedAt.toISOString(),
+      id:         s.id,
+      command:    s.command,
+      alive:      s.alive,
+      startedAt:  s.startedAt.toISOString(),
+      scrollback: s.getScrollback(),
     }));
   }
 
