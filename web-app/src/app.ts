@@ -43,32 +43,10 @@ let fontSize = 13;;
 
 // ── Connection ────────────────────────────────────────────────────────────────
 
-function getKey(): string {
-  let key = sessionStorage.getItem("negotiate-key");
-  if (!key) {
-    key = prompt("Enter access key:") ?? "";
-    if (key) sessionStorage.setItem("negotiate-key", key);
-  }
-  return key;
-}
-
 async function connect() {
   setStatus("connecting");
   try {
-    const key = getKey();
-    if (!key) { setStatus("disconnected"); return; }
-
-    const res = await fetch("/api/negotiate", {
-      headers: { "x-negotiate-key": key },
-    });
-
-    if (res.status === 401) {
-      sessionStorage.removeItem("negotiate-key");
-      alert("Invalid key — please try again.");
-      setStatus("disconnected");
-      return;
-    }
-
+    const res = await fetch("/api/negotiate");
     if (!res.ok) throw new Error(`negotiate failed: ${res.status}`);
     const { url } = await res.json() as { url: string };
 
